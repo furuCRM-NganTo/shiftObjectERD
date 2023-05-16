@@ -7,7 +7,6 @@ skinparam class {
     BorderColor<<Transaction>> DeepPink
 }
 
-
 entity "事業者" as Account<<Master>>{
     事業者ID
     親事業者ID
