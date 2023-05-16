@@ -1,0 +1,224 @@
+@startuml オブジェクトの実体関連図
+title オブジェクトの実体関連図
+skinparam class {
+    BackgroundColor<<Master>> AntiqueWhite/YellowGreen
+    BorderColor<<Master>> Green
+    BackgroundColor<<Transaction>> Pink
+    BorderColor<<Transaction>> DeepPink
+}
+
+entity "事業者" as Account<<Master>>{
+    事業者ID
+    親事業者ID
+}
+
+entity "事業者個人情報" as Contact<<Master>>{
+    事業者個人ID
+    事業者ID
+    法人No
+}
+
+entity "申請事業" as RequestProject<<Transaction>>{
+    申請事業ID
+    事業者ID
+    補助金ID
+}
+
+entity "フォーム入力情報" as RequestFormInputData<<Transaction>>{
+    フォーム入力情報ID
+    申請事業ID
+    申請フォームID
+    申請ステータス
+    フォーム入力情報（JSON）
+}
+
+entity "コメント" as Comment<<Transaction>>{
+    コメントID
+    フォーム入力情報ID
+}
+
+entity "通知文書" as NotificationDocument<<Transaction>>{
+    通知文書ID
+    フォーム入力情報ID
+}
+
+NotificationDocument --o RequestFormInputData
+
+entity "審査履歴" as AuditHistory<<Transaction>>{
+    審査履歴ID
+    フォーム入力情報ID
+}
+
+Account o-- Contact
+Account o-- RequestProject
+RequestProject o-- RequestFormInputData
+RequestFormInputData o-- Comment
+RequestFormInputData o-- AuditHistory
+
+entity "制度" as Institution<<Master>>{
+    制度ID
+}
+
+entity "補助金" as Subsidy<<Master>>{
+    補助金ID
+    制度ID
+}
+
+Institution o-- Subsidy
+Subsidy o-- RequestProject
+
+entity "ワークフロー" as Workflow<<Master>>{
+    ワークフローID
+    補助金ID
+}
+
+entity "手続き" as Procedure<<Master>>{
+    手続きID
+    ワークフローID
+}
+
+entity "手続き/申請フォーム紐付け" as ProcedureRequestFormRelation<<Transaction>>{
+    手続き/申請フォーム紐付けID
+    手続きID
+    申請フォームID
+}
+
+Subsidy o-- Workflow
+Workflow o-- Procedure
+Procedure o-- ProcedureRequestFormRelation
+
+entity "申請フォーム" as RequestForm<<Master>>{
+    申請フォームID
+    補助金ID
+}
+
+entity "申請フォーム項目" as RequestFormElement<<Master>>{
+    申請フォーム項目ID
+    申請フォームID
+}
+
+entity "申請フォーム項目非表示権限" as HiddenRequestFormElement<<Transaction>>{
+    申請フォーム項目非表示権限ID
+    手続きID
+    申請フォーム項目ID
+}
+
+RequestForm o-- ProcedureRequestFormRelation
+
+entity "プロセス" as Process<<Master>>{
+    プロセスID
+    申請フォームID
+    次の手続きID
+    ワークフローID
+}
+
+Procedure o-- Process
+Workflow o-- Process
+RequestForm o-- RequestFormElement
+RequestForm o-- Process
+
+entity "通知文書テンプレート/\nプロセス紐付け" as ProcessNotificationDocument<<Transaction>>{
+    通知文書テンプレート/プロセス紐付けID
+    プロセスID
+    通知文書テンプレートID
+}
+
+entity "通知文書テンプレート" as NotificationDocumentTemplate<<Master>>{
+    通知文書テンプレートID
+}
+
+Process o-- ProcessNotificationDocument
+NotificationDocumentTemplate o-- ProcessNotificationDocument
+
+entity "事務局/外部審査員権限" as AuditorAuthority<<Master>>{
+    事務局/外部審査員権限ID
+    事務局/外部審査員ID
+    事務局グループID
+    プロセスID
+    申請フォームID
+}
+
+RequestFormElement o-- HiddenRequestFormElement
+
+entity "外部審査担当割り当て" as ExternalAuditorRequestAssignment<<Transaction>>{
+    外部審査担当割り当てID
+    事務局/外部審査員権限ID
+    フォーム入力情報ID
+}
+ExternalAuditorRequestAssignment --o RequestFormInputData
+AuditorAuthority o-- HiddenRequestFormElement
+AuditorAuthority o-- ExternalAuditorRequestAssignment
+
+entity "事務局/外部審査員" as SecretariatAccount<<Master>>{
+    事務局/外部審査員ID
+}
+
+entity "事務局グループ" as SecretariatGroup<<Master>>{
+    事務局グループID
+}
+
+entity "グループメンバー" as SecretariatGroupAuditor<<Transaction>>{
+    メンバーID
+    事務局グループID
+    事務局/外部審査員ID
+}
+
+SecretariatAccount o-- SecretariatGroupAuditor
+SecretariatGroup o-- SecretariatGroupAuditor
+
+entity "申請情報一括ダウンロード" as RequestInfoBunchDownload<<Transaction>>{
+    申請情報一括ダウンロードID
+}
+
+entity "申請情報ダウンロード" as RequestInfoFileDow<<Transaction>>{
+    申請情報ダウンロードID
+    申請情報一括ダウンロード番号
+}
+
+RequestInfoBunchDownload o-- RequestInfoFileDow
+
+entity "申請情報ファイル" as RequestInfoFile<<Transaction>>{
+    申請情報ファイルID
+    申請情報ダウンロードID
+    ファイル名
+}
+
+entity "申請情報出力処理ログ" as RequestInfoFileInput<<Transaction>>{
+    申請情報出力処理ログID
+    申請情報ファイルID
+}
+
+RequestInfoFileDow o-- RequestInfoFile
+RequestInfoFile o-- RequestInfoFileInput
+
+entity "問合せ" as Consult<<Master>>{
+    問合せID
+    申請フォームID
+    フォーム入力情報ID
+    申請事業ID
+    補助金ID
+}
+
+Consult --o RequestForm
+Consult --o RequestFormInputData
+Consult --o RequestProject
+Consult --o Subsidy
+
+entity "問合せ内容" as ConsultContent<<Transaction>>{
+    問合せ内容ID
+    問合せID
+}
+
+entity "よくある問合せ" as FrequentlyAskedQuestion<<Master>>{
+    よくある問合せID
+    補助金ID
+}
+
+entity "添付ファイル管理" as FileStore<<Master>>{
+    添付ファイル管理ID
+}
+
+ConsultContent --o Consult
+AuditorAuthority --o SecretariatGroup
+AuditorAuthority --o Process
+AuditorAuthority --o RequestForm
